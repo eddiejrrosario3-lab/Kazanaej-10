@@ -1,0 +1,61 @@
+{
+  "entities": {
+    "Room": {
+      "title": "Battle Room",
+      "description": "A battle session created by a host (anfitrião) to be scored by judges.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "hostName": { "type": "string" },
+        "mc1Name": { "type": "string" },
+        "mc2Name": { "type": "string" },
+        "password": { "type": "string" },
+        "phase": { "type": "string", "enum": ["setup", "round1", "round2", "round3", "result"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "hostName", "mc1Name", "mc2Name", "password", "phase", "createdAt"]
+    },
+    "Vote": {
+      "title": "Judge Vote",
+      "description": "Scores submitted by a judge for a specific battle room.",
+      "type": "object",
+      "properties": {
+        "roomId": { "type": "string" },
+        "judgeName": { "type": "string" },
+        "mc1": { "type": "object", "$ref": "#/entities/MCDataSummary" },
+        "mc2": { "type": "object", "$ref": "#/entities/MCDataSummary" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["roomId", "judgeName", "mc1", "mc2", "updatedAt"]
+    },
+    "MCDataSummary": {
+      "title": "MC Score Data",
+      "description": "Scores for each round for an MC.",
+      "type": "object",
+      "properties": {
+        "rounds": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "rhymes": { "type": "number" },
+              "quality": { "type": "number" },
+              "response": { "type": "number" },
+              "performance": { "type": "number" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "firestore": {
+    "/rooms/{roomId}": {
+      "schema": "Room",
+      "description": "Active battle rooms."
+    },
+    "/rooms/{roomId}/votes/{judgeId}": {
+      "schema": "Vote",
+      "description": "Individual votes from judges in a room."
+    }
+  }
+}

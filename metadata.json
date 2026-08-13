@@ -1,0 +1,6 @@
+{
+  "name": "RRPL Battle Vote",
+  "description": "Aplicativo de votação para batalhas de rap (RRPL) com contagem de rimas e avaliação de 3 rounds.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

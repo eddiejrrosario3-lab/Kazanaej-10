@@ -1,0 +1,35 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper for IDs
+    function isValidId(id) { 
+      return id is string && id.size() <= 128; 
+    }
+
+    match /rooms/{roomId} {
+      // Allow everyone to read a room if they have the ID
+      allow get: if true;
+      // Host and judges can see the room state
+      allow list: if true; 
+      
+      // Create a room
+      allow create: if isValidId(roomId);
+      
+      // Update room (phase changes)
+      // We check passwords in the client, but for security we allow updates if the password matches
+      allow update: if request.resource.data.password == resource.data.password;
+      
+      match /votes/{judgeId} {
+        // Everyone in the room can see the votes
+        allow read: if true;
+        // Judges can submit/update their votes
+        allow create, update: if isValidId(judgeId);
+      }
+    }
+  }
+}
