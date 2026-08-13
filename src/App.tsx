@@ -5,6 +5,7 @@
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import defaultLogo from './assets/images/rrpl-logo.svg';
 import { 
   Users, 
   Mic2, 
@@ -47,9 +48,13 @@ type BattlePhase = 'setup' | 'round1' | 'round2' | 'round3' | 'result';
 export default function App() {
   const [phase, setPhase] = useState<BattlePhase>(() => (localStorage.getItem('rrpl_phase') as BattlePhase) || 'setup');
   const [juryName, setJuryName] = useState<string>(() => localStorage.getItem('rrpl_jury') || '');
-  const DEFAULT_LOGO = '/assets/images/rrpl-logo.png';
+  const DEFAULT_LOGO = defaultLogo;
   const [logo, setLogo] = useState<string>(() => {
-    return localStorage.getItem('rrpl_custom_logo') || DEFAULT_LOGO;
+    const saved = localStorage.getItem('rrpl_custom_logo');
+    if (saved && saved.startsWith('data:image/')) {
+      return saved;
+    }
+    return DEFAULT_LOGO;
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [activeMc, setActiveMc] = useState<0 | 1 | 2 | 3>(() => {
@@ -359,9 +364,17 @@ R3: ${getRoundWinner(2) === 1 ? mc1.name : getRoundWinner(2) === 2 ? mc2.name : 
         {logo && (
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90vw] h-[90vh] max-w-[900px] max-h-[900px] flex items-center justify-center opacity-[0.07] pointer-events-none">
             <img 
-              src={logo} 
+              src={logo || defaultLogo} 
               alt="RRPL Logo Watermark" 
               referrerPolicy="no-referrer"
+              onError={(e) => {
+                const target = e.currentTarget;
+                if (target.src !== defaultLogo) {
+                  target.src = defaultLogo;
+                  setLogo(defaultLogo);
+                  localStorage.removeItem('rrpl_custom_logo');
+                }
+              }}
               className="w-full h-full object-contain object-center scale-[1.05]" 
             />
           </div>
@@ -503,13 +516,23 @@ R3: ${getRoundWinner(2) === 1 ? mc1.name : getRoundWinner(2) === 2 ? mc2.name : 
             />
 
             <div 
-              className="w-28 h-28 sm:w-36 sm:h-36 relative overflow-hidden rounded-full shadow-2xl select-none mx-auto flex items-center justify-center p-0"
+              onClick={() => fileInputRef.current?.click()}
+              className="w-28 h-28 sm:w-36 sm:h-36 relative overflow-hidden rounded-full shadow-2xl select-none mx-auto flex items-center justify-center p-0 cursor-pointer group"
+              title="Clique para alterar o logótipo"
             >
               <div className="absolute inset-0 bg-brand/20 blur-2xl rounded-full" />
               <img 
-                src={logo} 
+                src={logo || defaultLogo} 
                 alt="RRPL Logo" 
-                className="w-full h-full object-cover object-center relative z-10 drop-shadow-2xl rounded-full"
+                onError={(e) => {
+                  const target = e.currentTarget;
+                  if (target.src !== defaultLogo) {
+                    target.src = defaultLogo;
+                    setLogo(defaultLogo);
+                    localStorage.removeItem('rrpl_custom_logo');
+                  }
+                }}
+                className="w-full h-full object-cover object-center relative z-10 drop-shadow-2xl rounded-full group-hover:scale-105 transition-transform"
                 referrerPolicy="no-referrer"
               />
             </div>
