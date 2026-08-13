@@ -554,7 +554,7 @@ R3: ${getRoundWinner(2) === 1 ? mc1.name : getRoundWinner(2) === 2 ? mc2.name : 
                 <div className="flex flex-col items-center space-y-2">
                   <div className="w-full max-w-sm flex justify-between items-center">
                     <label className="text-xs font-bold uppercase tracking-widest text-neutral-400 flex items-center gap-2">
-                      <Users className="w-4 h-4 text-brand" /> Adversário 1
+                      <Users className="w-4 h-4 text-brand" /> GLADIADOR 1
                     </label>
                     <span className="text-[10px] text-neutral-500 font-mono font-bold">
                       {mc1.name.length}/20
@@ -582,7 +582,7 @@ R3: ${getRoundWinner(2) === 1 ? mc1.name : getRoundWinner(2) === 2 ? mc2.name : 
                 <div className="flex flex-col items-center space-y-2">
                   <div className="w-full max-w-sm flex justify-between items-center">
                     <label className="text-xs font-bold uppercase tracking-widest text-neutral-400 flex items-center gap-2">
-                      <Users className="w-4 h-4 text-brand" /> Adversário 2
+                      <Users className="w-4 h-4 text-brand" /> GLADIADOR 2
                     </label>
                     <span className="text-[10px] text-neutral-500 font-mono font-bold">
                       {mc2.name.length}/20
@@ -876,7 +876,7 @@ R3: ${getRoundWinner(2) === 1 ? mc1.name : getRoundWinner(2) === 2 ? mc2.name : 
                             {!hasRhymes 
                               ? `Adicione pelo menos 1 rima para concluir o turno`
                               : activeMc === roundStarter 
-                              ? `Finalizar Vez de ${mc.name || 'MC'} → Ir para ${otherMc.name || 'Adversário'}` 
+                              ? `Finalizar Vez de ${mc.name || `Gladiador ${idx}`} → Ir para ${otherMc.name || `Gladiador ${otherMcIdx}`}` 
                               : `Concluir Turno & Ver Resultado do Round ${currentRoundIndex + 1}`}
                           </span>
                         </button>
