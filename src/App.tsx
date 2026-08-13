@@ -5,7 +5,7 @@
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import defaultLogo from './assets/images/rrrrrrpl.jpg';
+import { logoBase64 as officialLogo } from './assets/logoBase64';
 import { 
   Users, 
   Mic2, 
@@ -48,15 +48,10 @@ type BattlePhase = 'setup' | 'round1' | 'round2' | 'round3' | 'result';
 export default function App() {
   const [phase, setPhase] = useState<BattlePhase>(() => (localStorage.getItem('rrpl_phase') as BattlePhase) || 'setup');
   const [juryName, setJuryName] = useState<string>(() => localStorage.getItem('rrpl_jury') || '');
-  const DEFAULT_LOGO = defaultLogo;
-  const [logo, setLogo] = useState<string>(() => {
-    const saved = localStorage.getItem('rrpl_custom_logo');
-    if (saved && saved.startsWith('data:image/')) {
-      return saved;
-    }
-    return DEFAULT_LOGO;
-  });
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  // Clean up logo from localStorage if present
+  useEffect(() => {
+    localStorage.removeItem('rrpl_custom_logo');
+  }, []);
   const [activeMc, setActiveMc] = useState<0 | 1 | 2 | 3>(() => {
     const saved = localStorage.getItem('rrpl_active_mc');
     return saved ? (parseInt(saved) as 0 | 1 | 2 | 3) : 0;
@@ -356,29 +351,10 @@ R3: ${getRoundWinner(2) === 1 ? mc1.name : getRoundWinner(2) === 2 ? mc2.name : 
           </motion.div>
         )}
       </AnimatePresence>
-      {/* Background decoration with Large Watermark Logo */}
+      {/* Background decoration */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden select-none z-0 flex items-center justify-center">
         <div className="absolute -top-24 -left-24 w-96 h-96 bg-brand blur-[120px] rounded-full opacity-20" />
         <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-accent blur-[120px] rounded-full opacity-20" />
-        
-        {logo && (
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90vw] h-[90vh] max-w-[900px] max-h-[900px] flex items-center justify-center opacity-[0.07] pointer-events-none">
-            <img 
-              src={logo || defaultLogo} 
-              alt="RRPL Logo Watermark" 
-              referrerPolicy="no-referrer"
-              onError={(e) => {
-                const target = e.currentTarget;
-                if (target.src !== defaultLogo) {
-                  target.src = defaultLogo;
-                  setLogo(defaultLogo);
-                  localStorage.removeItem('rrpl_custom_logo');
-                }
-              }}
-              className="w-full h-full object-contain object-center scale-[1.05]" 
-            />
-          </div>
-        )}
       </div>
 
       {/* Persistent Top Header Controls */}
@@ -454,90 +430,13 @@ R3: ${getRoundWinner(2) === 1 ? mc1.name : getRoundWinner(2) === 2 ? mc2.name : 
       <main className={`relative z-10 mx-auto p-3 sm:p-6 flex flex-col min-h-screen transition-all duration-500 ${phase === 'setup' || activeMc === 0 || phase === 'result' ? 'max-w-2xl' : 'max-w-4xl'}`}>
         {(activeMc !== 0 || phase === 'setup' || phase === 'result') && (
           <header className="py-2 sm:py-4 text-center">
-          <div className="flex flex-col items-center gap-3 mb-2 sm:mb-4">
-            <input 
-              type="file" 
-              ref={fileInputRef} 
-              accept="image/*" 
-              className="hidden" 
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) {
-                  const reader = new FileReader();
-                  reader.onload = (evt) => {
-                    const rawResult = evt.target?.result as string;
-                    if (!rawResult) return;
-
-                    // Compress large images via HTML5 Canvas to prevent storage quota crashes
-                    const img = document.createElement('img');
-                    img.onload = () => {
-                      const canvas = document.createElement('canvas');
-                      const maxDim = 800;
-                      let width = img.width;
-                      let height = img.height;
-
-                      if (width > height) {
-                        if (width > maxDim) {
-                          height = Math.round((height * maxDim) / width);
-                          width = maxDim;
-                        }
-                      } else {
-                        if (height > maxDim) {
-                          width = Math.round((width * maxDim) / height);
-                          height = maxDim;
-                        }
-                      }
-
-                      canvas.width = width;
-                      canvas.height = height;
-                      const ctx = canvas.getContext('2d');
-                      if (ctx) {
-                        ctx.drawImage(img, 0, 0, width, height);
-                        const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.9);
-                        
-                        // Set state immediately for fast UI feedback
-                        setLogo(compressedDataUrl);
-                        
-                        // Save to localStorage safely
-                        try {
-                          localStorage.setItem('rrpl_custom_logo', compressedDataUrl);
-                        } catch (err) {
-                          console.warn('Could not persist custom logo:', err);
-                        }
-                      }
-                    };
-                    img.src = rawResult;
-                  };
-                  reader.readAsDataURL(file);
-                }
-                // Clear input value so selecting the same file triggers change event
-                e.target.value = '';
-              }} 
-            />
-
-            <div 
-              onClick={() => fileInputRef.current?.click()}
-              className="w-28 h-28 sm:w-36 sm:h-36 relative overflow-hidden rounded-full shadow-2xl select-none mx-auto flex items-center justify-center p-0 cursor-pointer group"
-              title="Clique para alterar o logótipo"
-            >
-              <div className="absolute inset-0 bg-brand/20 blur-2xl rounded-full" />
-              <img 
-                src={logo || defaultLogo} 
-                alt="RRPL Logo" 
-                onError={(e) => {
-                  const target = e.currentTarget;
-                  if (target.src !== defaultLogo) {
-                    target.src = defaultLogo;
-                    setLogo(defaultLogo);
-                    localStorage.removeItem('rrpl_custom_logo');
-                  }
-                }}
-                className="w-full h-full object-cover object-center relative z-10 drop-shadow-2xl rounded-full group-hover:scale-105 transition-transform"
-                referrerPolicy="no-referrer"
-              />
+            <div className="flex flex-col items-center gap-2 mb-2 sm:mb-4">
+              <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-neutral-900 border-2 border-brand/80 flex items-center justify-center shadow-[0_0_30px_rgba(255,62,62,0.45)] relative overflow-hidden select-none p-1">
+                <div className="absolute inset-0 bg-brand/10 blur-xl rounded-full" />
+                <img src={officialLogo} alt="RRPL Logo Oficial" className="w-full h-full object-cover rounded-full relative z-10" />
+              </div>
             </div>
-          </div>
-        </header>
+          </header>
         )}
 
         <AnimatePresence mode="wait">
@@ -746,7 +645,14 @@ R3: ${getRoundWinner(2) === 1 ? mc1.name : getRoundWinner(2) === 2 ? mc2.name : 
                     const otherMcIdx = idx === 1 ? 2 : 1;
                     const otherMc = idx === 1 ? mc2 : mc1;
 
-                    const hasRhymes = (roundData?.rhymes || 0) > 0;
+                    const hasEvaluation = 
+                      (roundData?.rhymes || 0) > 0 ||
+                      (roundData?.quality || 0) > 0 ||
+                      (roundData?.response || 0) > 0 ||
+                      (roundData?.performance || 0) > 0 ||
+                      (roundData?.oooShit || 0) > 0 ||
+                      (roundData?.brancas !== undefined && roundData.brancas < 25) ||
+                      ((roundData?.notes || '').trim().length > 0);
 
                     const ptsTotal = (
                       ((roundData.rhymes || 0) * 1) +
@@ -877,7 +783,8 @@ R3: ${getRoundWinner(2) === 1 ? mc1.name : getRoundWinner(2) === 2 ? mc2.name : 
 
                         {/* Turn Action Button */}
                         <button
-                          disabled={!hasRhymes}
+                          type="button"
+                          disabled={!hasEvaluation}
                           onClick={() => {
                             const isFirstToRhymeInRound = activeMc === roundStarter;
                             if (isFirstToRhymeInRound) {
@@ -889,18 +796,18 @@ R3: ${getRoundWinner(2) === 1 ? mc1.name : getRoundWinner(2) === 2 ? mc2.name : 
                             }
                           }}
                           className={`w-full py-4 rounded-2xl font-black uppercase text-sm sm:text-base flex items-center justify-center gap-2 border-2 transition-all ${
-                            hasRhymes 
-                              ? 'border-brand bg-brand text-white hover:bg-brand/90 shadow-[0_0_25px_rgba(255,62,62,0.4)] cursor-pointer active:scale-98'
+                            hasEvaluation 
+                              ? 'border-brand bg-brand text-white hover:bg-brand/90 shadow-[0_0_25px_rgba(255,62,62,0.45)] cursor-pointer active:scale-98'
                               : 'border-neutral-800 bg-neutral-900 text-neutral-500 opacity-50 cursor-not-allowed shadow-none'
                           }`}
                         >
                           <Mic2 className="w-5 h-5" />
                           <span>
-                            {!hasRhymes 
-                              ? `Adicione pelo menos 1 rima para concluir o turno`
+                            {!hasEvaluation 
+                              ? 'Adicione pontuação (rimas, ataque, resposta, etc.) para concluir'
                               : activeMc === roundStarter 
-                              ? `Finalizar Vez de ${mc.name || `Gladiador ${idx}`} → Ir para ${otherMc.name || `Gladiador ${otherMcIdx}`}` 
-                              : `Concluir Turno & Ver Resultado do Round ${currentRoundIndex + 1}`}
+                                ? `Finalizar Vez de ${mc.name || `Gladiador ${idx}`} → Ir para ${otherMc.name || `Gladiador ${otherMcIdx}`}` 
+                                : `Concluir Turno & Ver Resultado do Round ${currentRoundIndex + 1}`}
                           </span>
                         </button>
                       </div>
