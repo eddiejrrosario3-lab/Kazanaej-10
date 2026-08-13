@@ -5,7 +5,7 @@
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import defaultLogo from './assets/images/rrpl-logo.svg';
+import defaultLogo from './assets/images/rrrrrrpl.jpg';
 import { 
   Users, 
   Mic2, 
