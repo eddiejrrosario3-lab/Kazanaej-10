@@ -351,10 +351,19 @@ R3: ${getRoundWinner(2) === 1 ? mc1.name : getRoundWinner(2) === 2 ? mc2.name : 
           </motion.div>
         )}
       </AnimatePresence>
-      {/* Background decoration */}
+      {/* Background decoration with RRPL Official Logo Watermark */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden select-none z-0 flex items-center justify-center">
         <div className="absolute -top-24 -left-24 w-96 h-96 bg-brand blur-[120px] rounded-full opacity-20" />
         <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-accent blur-[120px] rounded-full opacity-20" />
+        
+        {/* Large Central RRPL Logo Watermark */}
+        <div className="absolute w-[85vw] h-[85vh] max-w-[650px] max-h-[650px] flex items-center justify-center opacity-[0.08] pointer-events-none transform -rotate-6 scale-110">
+          <img 
+            src={officialLogo} 
+            alt="RRPL Watermark" 
+            className="w-full h-full object-contain drop-shadow-[0_0_50px_rgba(255,62,62,0.3)]" 
+          />
+        </div>
       </div>
 
       {/* Persistent Top Header Controls */}
