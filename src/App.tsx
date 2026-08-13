@@ -23,6 +23,7 @@ import {
   Trash2,
   Droplet,
   Scale,
+  Upload,
   Image as ImageIcon
 } from 'lucide-react';
 
@@ -46,7 +47,7 @@ type BattlePhase = 'setup' | 'round1' | 'round2' | 'round3' | 'result';
 export default function App() {
   const [phase, setPhase] = useState<BattlePhase>(() => (localStorage.getItem('rrpl_phase') as BattlePhase) || 'setup');
   const [juryName, setJuryName] = useState<string>(() => localStorage.getItem('rrpl_jury') || '');
-  const DEFAULT_LOGO = '/rrpl-logo.png';
+  const DEFAULT_LOGO = '/assets/images/rrpl-logo.png';
   const [logo, setLogo] = useState<string>(() => {
     return localStorage.getItem('rrpl_custom_logo') || DEFAULT_LOGO;
   });
@@ -356,12 +357,12 @@ R3: ${getRoundWinner(2) === 1 ? mc1.name : getRoundWinner(2) === 2 ? mc2.name : 
         <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-accent blur-[120px] rounded-full opacity-20" />
         
         {logo && (
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[123vw] h-[123vh] max-w-[1238px] max-h-[1238px] flex items-center justify-center opacity-[0.08] pointer-events-none">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90vw] h-[90vh] max-w-[900px] max-h-[900px] flex items-center justify-center opacity-[0.07] pointer-events-none">
             <img 
               src={logo} 
               alt="RRPL Logo Watermark" 
               referrerPolicy="no-referrer"
-              className="w-full h-full object-contain object-center scale-[1.47]" 
+              className="w-full h-full object-contain object-center scale-[1.05]" 
             />
           </div>
         )}
@@ -440,7 +441,7 @@ R3: ${getRoundWinner(2) === 1 ? mc1.name : getRoundWinner(2) === 2 ? mc2.name : 
       <main className={`relative z-10 mx-auto p-3 sm:p-6 flex flex-col min-h-screen transition-all duration-500 ${phase === 'setup' || activeMc === 0 || phase === 'result' ? 'max-w-2xl' : 'max-w-4xl'}`}>
         {(activeMc !== 0 || phase === 'setup' || phase === 'result') && (
           <header className="py-2 sm:py-4 text-center">
-          <div className="flex flex-col items-center gap-2 mb-2 sm:mb-4">
+          <div className="flex flex-col items-center gap-3 mb-2 sm:mb-4">
             <input 
               type="file" 
               ref={fileInputRef} 
@@ -509,6 +510,7 @@ R3: ${getRoundWinner(2) === 1 ? mc1.name : getRoundWinner(2) === 2 ? mc2.name : 
                 src={logo} 
                 alt="RRPL Logo" 
                 className="w-full h-full object-cover object-center relative z-10 drop-shadow-2xl rounded-full"
+                referrerPolicy="no-referrer"
               />
             </div>
           </div>
@@ -711,282 +713,233 @@ R3: ${getRoundWinner(2) === 1 ? mc1.name : getRoundWinner(2) === 2 ? mc2.name : 
                 </div>
               </div>
 
-              <div className="relative">
-                {/* VS Badge for Desktop */}
-                <div className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[30] pointer-events-none">
-                  <motion.div 
-                    initial={{ scale: 0, rotate: 0 }}
-                    animate={{ scale: 1, rotate: 0 }}
-                    className="bg-brand text-white font-black italic px-5 py-2 rounded-xl shadow-[0_0_30px_rgba(255,62,62,0.6)] border-2 border-white/20 text-3xl tracking-tighter uppercase"
-                  >
-                    VS
-                  </motion.div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16">
-                  {[1, 2].map(idx => {
+              {activeMc === 1 || activeMc === 2 ? (
+                /* Single Active Gladiator Counting Card (Centered) */
+                <div className="w-full max-w-xl mx-auto">
+                  {(() => {
+                    const idx = activeMc as 1 | 2;
                     const mc = idx === 1 ? mc1 : mc2;
                     const roundData = mc.rounds[currentRoundIndex];
-                    const isActive = activeMc === idx;
-                    const isSelectionPhase = activeMc === 0;
-                    
-                    const isStarter = roundStarter === idx;
-                    const starterHasFinished = roundStarter !== 0 && activeMc !== roundStarter;
-                    const isCompletedInRound = (isStarter && starterHasFinished) || activeMc === 3;
+                    const otherMcIdx = idx === 1 ? 2 : 1;
+                    const otherMc = idx === 1 ? mc2 : mc1;
 
-                    const hasScored = roundData && (
-                      (roundData.rhymes || 0) > 0 ||
-                      (roundData.quality || 0) > 0 ||
-                      (roundData.response || 0) > 0 ||
-                      (roundData.performance || 0) > 0 ||
-                      (roundData.oooShit || 0) > 0 ||
-                      (roundData.brancas !== undefined && roundData.brancas < 25)
-                    );
+                    const hasRhymes = (roundData?.rhymes || 0) > 0;
+
+                    const ptsTotal = (
+                      ((roundData.rhymes || 0) * 1) +
+                      ((roundData.quality || 0) * 2) +
+                      ((roundData.response || 0) * 1) +
+                      ((roundData.performance || 0) * 1) +
+                      ((roundData.oooShit || 0) * 1.5) -
+                      (25 - (roundData.brancas !== undefined ? roundData.brancas : 25))
+                    ).toFixed(1);
 
                     return (
-                      <div key={idx} className={`flex flex-col gap-4 transition-all duration-500 ${!isActive ? 'opacity-70 scale-[0.98]' : 'z-20'}`}>
-                        <div className={`bg-neutral-900 rounded-3xl border-2 p-4 sm:p-6 space-y-4 sm:space-y-6 overflow-hidden relative transition-colors ${
-                          isActive 
-                            ? 'border-brand shadow-[0_0_20px_rgba(255,62,62,0.1)]' 
-                            : isSelectionPhase
-                            ? 'border-neutral-700 hover:border-brand/50 cursor-pointer group'
-                            : 'border-neutral-800 opacity-80'
-                        }`}
-                        onClick={() => {
-                          if (isSelectionPhase) {
-                            setActiveMc(idx as 1 | 2);
-                            setRoundStarter(idx as 1 | 2);
-                          }
-                        }}
-                        title={
-                          isActive 
-                            ? "Gladiador Rimando Agora" 
-                            : isSelectionPhase 
-                            ? "Clique para escolher este gladiador para começar" 
-                            : isCompletedInRound
-                            ? "Turno concluído neste round"
-                            : "Aguardando vez de rimar"
-                        }
-                        >
-                           {/* Identity label */}
-                          <div className="flex justify-between items-start">
+                      <div className="flex flex-col gap-4">
+                        <div className="bg-neutral-900/95 rounded-3xl border-2 border-brand p-5 sm:p-7 space-y-5 shadow-[0_0_30px_rgba(255,62,62,0.15)] relative overflow-hidden">
+                          {/* Top Identity bar */}
+                          <div className="flex justify-between items-start gap-2">
                             <div>
-                               <div className="flex items-center gap-2 mb-1 flex-wrap">
-                                {isActive ? (
-                                  <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ repeat: Infinity }} className="w-2 h-2 bg-brand rounded-full shadow-[0_0_10px_#FF3E3E]" />
-                                ) : isSelectionPhase ? (
-                                  <div className="w-2 h-2 bg-neutral-500 rounded-full group-hover:bg-brand transition-colors" />
-                                ) : isCompletedInRound ? (
-                                  <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
-                                ) : (
-                                  <div className="w-2 h-2 bg-neutral-600 rounded-full" />
-                                )}
-                                <span className={`text-[9px] font-bold uppercase tracking-widest ${isActive ? 'text-brand' : isSelectionPhase ? 'text-neutral-400 group-hover:text-brand' : isCompletedInRound ? 'text-green-500' : 'text-neutral-500'}`}>
-                                  {isActive ? 'Rimando Agora' : isSelectionPhase ? 'Escolher para Começar' : isCompletedInRound ? 'Turno Concluído' : 'Aguardando Vez'}
+                              <div className="flex items-center gap-2 mb-1">
+                                <motion.div animate={{ scale: [1, 1.25, 1] }} transition={{ repeat: Infinity, duration: 1.5 }} className="w-2.5 h-2.5 bg-brand rounded-full shadow-[0_0_12px_#FF3E3E]" />
+                                <span className="text-xs font-black uppercase tracking-widest text-brand">
+                                  Rimando Agora • Turno {roundStarter === idx ? '1' : '2'}
                                 </span>
                               </div>
-                              <div className="text-lg sm:text-2xl font-black italic uppercase leading-none px-2 py-1 select-none cursor-default text-white">
-                                {mc.name || "NOME DO MC"}
+                              <div className="text-2xl sm:text-3xl font-black italic uppercase leading-tight text-white tracking-wider">
+                                {mc.name || `GLADIADOR ${idx}`}
                               </div>
                             </div>
-                            <div className={`ml-4 px-4 py-2.5 rounded-2xl flex flex-col items-center border-2 transition-all shrink-0 ${
-                              isActive 
-                                ? 'bg-brand border-brand shadow-[0_0_20px_rgba(255,62,62,0.4)] scale-110' 
-                                : 'bg-neutral-800 border-neutral-700'
-                            }`}>
-                              <span className={`text-[8px] font-black uppercase leading-none mb-0.5 tracking-tighter ${isActive ? 'text-white/80' : 'text-neutral-400'}`}>PTS TOTAL</span>
-                              <div className={`text-xl font-black font-mono leading-none ${isActive ? 'text-white' : 'text-white/60'}`}>
-                                {(((roundData.rhymes || 0) * 1) + ((roundData.quality || 0) * 2) + ((roundData.response || 0) * 1) + ((roundData.performance || 0) * 1) + ((roundData.oooShit || 0) * 1.5) - (25 - (roundData.brancas !== undefined ? roundData.brancas : 25))).toFixed(1)}
+
+                            <div className="bg-brand border-2 border-brand/80 shadow-[0_0_20px_rgba(255,62,62,0.4)] px-4 py-2 rounded-2xl flex flex-col items-center shrink-0">
+                              <span className="text-[9px] font-black uppercase leading-none mb-0.5 tracking-tighter text-white/80">PTS ROUND</span>
+                              <div className="text-2xl font-black font-mono leading-none text-white">
+                                {ptsTotal}
                               </div>
                             </div>
                           </div>
 
-                          <div className="space-y-4">
-                            {/* Rhyme Counter */}
-                            <div className={`space-y-1 sm:space-y-2 transition-opacity ${!isActive ? 'opacity-50 pointer-events-none' : ''}`}>
-                              <div className="flex justify-between items-baseline">
-                                <span className={`text-xs sm:text-sm font-black uppercase tracking-wider ${isActive ? 'text-white' : 'text-neutral-300'}`}>Rimas</span>
-                                <span className={`text-lg sm:text-xl font-black font-mono transition-colors ${isActive ? 'text-white' : 'text-neutral-400'}`}>{roundData.rhymes}</span>
-                              </div>
-                              <div className="flex gap-2">
-                                <button 
-                                  onClick={(e) => { e.stopPropagation(); updateScore(idx as 1 | 2, 'rhymes', -1); }}
-                                  disabled={!isActive}
-                                  className="flex-1 bg-neutral-800 hover:bg-neutral-700 disabled:opacity-30 py-2 sm:py-2.5 rounded-xl transition-colors flex justify-center items-center text-white"
-                                >
-                                  <Minus className="w-4 h-4" />
-                                </button>
-                                <button 
-                                  onClick={(e) => { e.stopPropagation(); updateScore(idx as 1 | 2, 'rhymes', 1); }}
-                                  disabled={!isActive}
-                                  className="flex-[3] bg-brand/20 border-2 border-brand hover:bg-brand/30 disabled:opacity-30 py-2 sm:py-2.5 rounded-xl transition-colors flex justify-center items-center gap-1.5 font-black text-sm text-white"
-                                >
-                                  <Plus className="w-4 h-4" /> RIMA!
-                                </button>
-                              </div>
+                          {/* Rhymes */}
+                          <div className="space-y-2 pt-2 border-t border-neutral-800">
+                            <div className="flex justify-between items-baseline">
+                              <span className="text-sm font-black uppercase tracking-wider text-white">Rimas</span>
+                              <span className="text-2xl font-black font-mono text-brand">{roundData.rhymes}</span>
                             </div>
+                            <div className="flex gap-2">
+                              <button 
+                                onClick={() => updateScore(idx, 'rhymes', -1)}
+                                className="flex-1 bg-neutral-800 hover:bg-neutral-700 py-3 rounded-xl transition-colors flex justify-center items-center text-white font-bold cursor-pointer"
+                              >
+                                <Minus className="w-5 h-5" />
+                              </button>
+                              <button 
+                                onClick={() => updateScore(idx, 'rhymes', 1)}
+                                className="flex-[3] bg-brand/20 border-2 border-brand hover:bg-brand/30 py-3 rounded-xl transition-colors flex justify-center items-center gap-2 font-black text-base text-white shadow-[0_0_15px_rgba(255,62,62,0.2)] active:scale-95 cursor-pointer"
+                              >
+                                <Plus className="w-5 h-5" /> RIMA!
+                              </button>
+                            </div>
+                          </div>
 
-                            {/* Evaluation Fields */}
-                            <div className={`space-y-4 ${!isActive ? 'opacity-50 pointer-events-none' : ''}`}>
-                              {[
-                                { label: 'Ataque Direto', field: 'quality' as const, max: 50, color: 'bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.5)]', textColor: 'text-green-300', labelColor: 'text-green-300' },
-                                { label: 'Resposta', field: 'response' as const, max: 10, color: 'bg-yellow-300 shadow-[0_0_8px_rgba(253,224,71,0.5)]', textColor: 'text-yellow-300', labelColor: 'text-yellow-300' },
-                                { label: 'BRANCAS', field: 'brancas' as const, max: 25, color: 'bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.5)]', textColor: 'text-cyan-300', labelColor: 'text-cyan-300', onlyMinus: true },
-                                { label: 'Encenação', field: 'performance' as const, max: 10, color: 'bg-red-400 shadow-[0_0_8px_rgba(248,113,113,0.5)]', textColor: 'text-red-300', labelColor: 'text-red-300' },
-                                { label: 'OOOOH SHIT!', field: 'oooShit' as const, max: 10, color: 'bg-amber-300 shadow-[0_0_8px_rgba(252,211,77,0.5)]', textColor: 'text-amber-300', labelColor: 'text-amber-300', special: true },
-                              ].map((item) => (
-                                <div 
-                                  key={item.label} 
-                                  className={`space-y-1 sm:space-y-2 pt-2 border-t border-neutral-800 transition-all duration-500 ${
-                                    item.special && isActive && roundData.oooShit > 0 
-                                      ? 'bg-amber-500/10 -mx-2 px-2 py-1 rounded-xl shadow-[0_0_20px_rgba(251,191,36,0.15)] border border-amber-500/30' 
-                                      : ''
-                                  }`}
-                                >
-                                   <div className="flex justify-between items-baseline">
-                                    <span className={`text-xs sm:text-sm font-black uppercase tracking-wider flex items-center gap-1.5 ${
-                                      isActive 
-                                        ? (item.special ? 'text-amber-300 animate-pulse' : item.labelColor) 
-                                        : 'text-neutral-300'
-                                    }`}>
-                                      {item.field === 'brancas' && (
-                                        <Droplet className={`w-4 h-4 ${isActive ? 'text-cyan-300 fill-cyan-300/30' : 'text-neutral-400'}`} />
-                                      )}
-                                      {item.label}
-                                    </span>
-                                    <span className={`text-base sm:text-lg font-black transition-colors ${isActive ? item.textColor : 'text-neutral-400'} ${item.special && isActive && roundData.oooShit > 0 ? 'scale-125 origin-right drop-shadow-[0_0_10px_rgba(251,191,36,0.8)]' : ''}`}>
-                                      {roundData[item.field]}/{item.max}
-                                    </span>
-                                  </div>
-                                  <div className="flex gap-2 items-center">
-                                    <button 
-                                       onClick={(e) => { e.stopPropagation(); updateScore(idx as 1 | 2, item.field, -1); }}
-                                       disabled={!isActive}
-                                       className="flex-1 bg-neutral-800 hover:bg-neutral-700 border border-neutral-700/80 disabled:opacity-30 transition-colors p-2.5 rounded-lg flex justify-center items-center text-white"
-                                    >
-                                      <Minus className="w-4 h-4 mx-auto text-white" />
-                                    </button>
-                                    <div className="flex-[4] h-2.5 bg-neutral-900 border border-neutral-800 rounded-full overflow-hidden">
-                                      <motion.div 
-                                        className={`h-full ${item.color}`}
-                                        initial={false}
-                                        animate={{ 
-                                          width: `${(roundData[item.field] / item.max) * 100}%`,
-                                          opacity: isActive ? 1 : 0.3
-                                        }}
-                                      />
-                                    </div>
-                                    {!(item as any).onlyMinus ? (
-                                      <button 
-                                        onClick={(e) => { e.stopPropagation(); updateScore(idx as 1 | 2, item.field, 1); }}
-                                        disabled={!isActive}
-                                        className="flex-1 p-2.5 bg-neutral-800 hover:bg-neutral-700 border border-neutral-700/80 disabled:opacity-30 transition-colors rounded-lg flex justify-center items-center text-white"
-                                      >
-                                        <Plus className="w-4 h-4 mx-auto text-white" />
-                                      </button>
-                                    ) : (
-                                      <div className="flex-1" />
+                          {/* Evaluation Fields */}
+                          <div className="space-y-4 pt-2 border-t border-neutral-800">
+                            {[
+                              { label: 'Ataque Direto', field: 'quality' as const, max: 50, color: 'bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.5)]', textColor: 'text-green-300', labelColor: 'text-green-300' },
+                              { label: 'Resposta', field: 'response' as const, max: 10, color: 'bg-yellow-300 shadow-[0_0_8px_rgba(253,224,71,0.5)]', textColor: 'text-yellow-300', labelColor: 'text-yellow-300' },
+                              { label: 'BRANCAS', field: 'brancas' as const, max: 25, color: 'bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.5)]', textColor: 'text-cyan-300', labelColor: 'text-cyan-300', onlyMinus: true },
+                              { label: 'Encenação', field: 'performance' as const, max: 10, color: 'bg-red-400 shadow-[0_0_8px_rgba(248,113,113,0.5)]', textColor: 'text-red-300', labelColor: 'text-red-300' },
+                              { label: 'OOOOH SHIT!', field: 'oooShit' as const, max: 10, color: 'bg-amber-300 shadow-[0_0_8px_rgba(252,211,77,0.5)]', textColor: 'text-amber-300', labelColor: 'text-amber-300', special: true },
+                            ].map((item) => (
+                              <div 
+                                key={item.label} 
+                                className={`space-y-1.5 transition-all ${
+                                  item.special && roundData.oooShit > 0 
+                                    ? 'bg-amber-500/10 -mx-2 px-3 py-1.5 rounded-xl shadow-[0_0_20px_rgba(251,191,36,0.15)] border border-amber-500/30' 
+                                    : ''
+                                }`}
+                              >
+                                <div className="flex justify-between items-baseline">
+                                  <span className={`text-xs sm:text-sm font-black uppercase tracking-wider flex items-center gap-1.5 ${item.special ? 'text-amber-300 animate-pulse' : item.labelColor}`}>
+                                    {item.field === 'brancas' && (
+                                      <Droplet className="w-4 h-4 text-cyan-300 fill-cyan-300/30" />
                                     )}
-                                  </div>
+                                    {item.label}
+                                  </span>
+                                  <span className={`text-base sm:text-lg font-black ${item.textColor} ${item.special && roundData.oooShit > 0 ? 'scale-125 origin-right drop-shadow-[0_0_10px_rgba(252,211,77,0.8)]' : ''}`}>
+                                    {roundData[item.field]}/{item.max}
+                                  </span>
                                 </div>
-                              ))}
-                            </div>
+                                <div className="flex gap-2 items-center">
+                                  <button 
+                                    onClick={() => updateScore(idx, item.field, -1)}
+                                    className="flex-1 bg-neutral-800 hover:bg-neutral-700 border border-neutral-700/80 transition-colors p-2.5 rounded-xl flex justify-center items-center text-white cursor-pointer"
+                                  >
+                                    <Minus className="w-4 h-4 text-white" />
+                                  </button>
+                                  <div className="flex-[4] h-3 bg-neutral-950 border border-neutral-800 rounded-full overflow-hidden">
+                                    <motion.div 
+                                      className={`h-full ${item.color}`}
+                                      initial={false}
+                                      animate={{ 
+                                        width: `${(roundData[item.field] / item.max) * 100}%` 
+                                      }}
+                                    />
+                                  </div>
+                                  {!(item as any).onlyMinus ? (
+                                    <button 
+                                      onClick={() => updateScore(idx, item.field, 1)}
+                                      className="flex-1 p-2.5 bg-neutral-800 hover:bg-neutral-700 border border-neutral-700/80 transition-colors rounded-xl flex justify-center items-center text-white cursor-pointer"
+                                    >
+                                      <Plus className="w-4 h-4 text-white" />
+                                    </button>
+                                  ) : (
+                                    <div className="flex-1" />
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
 
-                            {/* Notes Area */}
-                            <div className={`space-y-1 sm:space-y-2 pt-2 border-t border-neutral-800 ${!isActive ? 'opacity-50 pointer-events-none' : ''}`}>
-                              <span className={`text-xs sm:text-sm font-black uppercase tracking-wider ${isActive ? 'text-white' : 'text-neutral-300'}`}>Notas rápidas</span>
-                              <textarea
-                                placeholder="..."
-                                value={roundData.notes}
-                                disabled={!isActive}
-                                onChange={(e) => { e.stopPropagation(); updateScore(idx as 1 | 2, 'notes', e.target.value); }}
-                                className="w-full bg-neutral-900 border border-neutral-700 p-3 rounded-lg text-sm text-white font-medium focus:border-brand outline-none transition-colors min-h-[60px] resize-none disabled:opacity-30 placeholder-neutral-500"
-                              />
-                            </div>
+                          {/* Notes */}
+                          <div className="space-y-1.5 pt-2 border-t border-neutral-800">
+                            <span className="text-xs sm:text-sm font-black uppercase tracking-wider text-white">Notas Rápidas</span>
+                            <textarea
+                              placeholder="Observações das rimas do gladiador..."
+                              value={roundData.notes}
+                              onChange={(e) => updateScore(idx, 'notes', e.target.value)}
+                              className="w-full bg-neutral-950 border border-neutral-800 p-3 rounded-xl text-sm text-white font-medium focus:border-brand outline-none transition-colors min-h-[60px] resize-none placeholder-neutral-600"
+                            />
                           </div>
                         </div>
 
-                        {/* Turn action / status button */}
+                        {/* Turn Action Button */}
                         <button
-                          disabled={(!isActive && !isSelectionPhase) || (isActive && !hasScored)}
+                          disabled={!hasRhymes}
                           onClick={() => {
-                            if (isSelectionPhase) {
-                              setActiveMc(idx as 1 | 2);
-                              setRoundStarter(idx as 1 | 2);
-                              setFirstRoundStarter(idx as 1 | 2);
-                              const chosenName = (idx === 1 ? mc1.name : mc2.name) || `Gladiador ${idx}`;
-                              setStarterAnimation({ name: chosenName, roundNum: currentRoundIndex + 1, isSecond: false });
-                            } else if (isActive && hasScored) {
-                              const otherMc = idx === 1 ? 2 : 1;
-                              const isFirstToRhymeInRound = activeMc === roundStarter;
-                              if (isFirstToRhymeInRound) {
-                                setActiveMc(otherMc as 1 | 2);
-                                const nextName = (otherMc === 1 ? mc1.name : mc2.name) || `Gladiador ${otherMc}`;
-                                setStarterAnimation({ name: nextName, roundNum: currentRoundIndex + 1, isSecond: true });
-                              } else {
-                                setActiveMc(3); // Both finished
-                              }
+                            const isFirstToRhymeInRound = activeMc === roundStarter;
+                            if (isFirstToRhymeInRound) {
+                              setActiveMc(otherMcIdx as 1 | 2);
+                              const nextName = otherMc.name || `Gladiador ${otherMcIdx}`;
+                              setStarterAnimation({ name: nextName, roundNum: currentRoundIndex + 1, isSecond: true });
+                            } else {
+                              setActiveMc(3); // Both finished
                             }
                           }}
-                          className={`py-4 rounded-2xl font-black uppercase text-xs flex items-center justify-center gap-2 border-2 transition-all shadow-lg ${
-                            isActive
-                              ? hasScored
-                                ? 'bg-brand text-white border-brand hover:bg-brand/90 shadow-[0_0_20px_rgba(255,62,62,0.3)] cursor-pointer'
-                                : 'bg-neutral-900 border-neutral-800 text-neutral-500 opacity-60 cursor-not-allowed'
-                              : isSelectionPhase
-                              ? 'bg-neutral-800 border-neutral-700 hover:bg-white hover:text-black text-neutral-300 cursor-pointer'
-                              : isCompletedInRound
-                              ? 'bg-neutral-900 border-neutral-800/80 text-neutral-600 opacity-50 cursor-not-allowed'
-                              : 'bg-neutral-900 border-neutral-800 text-neutral-500 opacity-60 cursor-not-allowed'
+                          className={`w-full py-4 rounded-2xl font-black uppercase text-sm sm:text-base flex items-center justify-center gap-2 border-2 transition-all ${
+                            hasRhymes 
+                              ? 'border-brand bg-brand text-white hover:bg-brand/90 shadow-[0_0_25px_rgba(255,62,62,0.4)] cursor-pointer active:scale-98'
+                              : 'border-neutral-800 bg-neutral-900 text-neutral-500 opacity-50 cursor-not-allowed shadow-none'
                           }`}
                         >
-                          {isCompletedInRound ? (
-                            <>
-                              <CheckCircle2 className="w-4 h-4 text-green-500" />
-                              <span>Turno Concluído</span>
-                            </>
-                          ) : isActive ? (
-                            <>
-                              <Mic2 className="w-4 h-4" /> 
-                              <span>
-                                {!hasScored
-                                  ? "Adicione Rimas/Pontos para Finalizar"
-                                  : activeMc === roundStarter 
-                                  ? `Finalizar Vez de ${mc.name || 'MC'} e Passar Vez` 
-                                  : `Concluir Rimas do Round`}
-                              </span>
-                            </>
-                          ) : isSelectionPhase ? (
-                            <>
-                              <Mic2 className="w-4 h-4" />
-                              <span>Começar com {mc.name || 'MC'}</span>
-                            </>
-                          ) : (
-                            <>
-                              <Lock className="w-4 h-4 text-neutral-600" />
-                              <span>Aguardando Vez de Rimar</span>
-                            </>
-                          )}
+                          <Mic2 className="w-5 h-5" />
+                          <span>
+                            {!hasRhymes 
+                              ? `Adicione pelo menos 1 rima para concluir o turno`
+                              : activeMc === roundStarter 
+                              ? `Finalizar Vez de ${mc.name || 'MC'} → Ir para ${otherMc.name || 'Adversário'}` 
+                              : `Concluir Turno & Ver Resultado do Round ${currentRoundIndex + 1}`}
+                          </span>
                         </button>
                       </div>
                     );
-                  })}
+                  })()}
                 </div>
-              </div>
+              ) : activeMc === 3 ? (
+                /* Round Completed Summary Card */
+                <div className="w-full max-w-xl mx-auto space-y-6">
+                  <div className="bg-neutral-900/95 border-2 border-neutral-700/80 rounded-3xl p-6 sm:p-8 space-y-6 text-center shadow-2xl">
+                    <div className="space-y-2">
+                      <div className="inline-flex items-center gap-2 px-3 py-1 bg-green-500/20 border border-green-500/40 rounded-full text-green-400 text-xs font-bold uppercase tracking-widest">
+                        <CheckCircle2 className="w-4 h-4" /> Round {currentRoundIndex + 1} Concluído
+                      </div>
+                      <h3 className="text-2xl sm:text-3xl font-black italic uppercase text-white tracking-wider">
+                        Resumo do Round {currentRoundIndex + 1}
+                      </h3>
+                    </div>
 
-              <motion.button
-                whileHover={{ scale: activeMc === 3 ? 1.02 : 1 }}
-                whileTap={{ scale: activeMc === 3 ? 0.98 : 1 }}
-                onClick={nextPhase}
-                disabled={activeMc !== 3}
-                className="w-full bg-white text-black py-5 rounded-2xl font-black uppercase text-lg flex items-center justify-center gap-2 shadow-xl disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-              >
-                {activeMc === 3 ? (
-                  <>{phase === 'round3' ? 'Ver Resultado Final' : `Fechar ${currentRoundIndex + 1}º Round`} <CheckCircle2 className="w-5 h-5" /></>
-                ) : (
-                  <><Lock className="w-5 h-5" /> {activeMc === 0 ? 'Aguardando adversário...' : `Aguardando ${activeMc === 1 ? mc1.name : mc2.name}...`}</>
-                )}
-              </motion.button>
+                    <div className="grid grid-cols-2 gap-4 pt-2">
+                      {[1, 2].map(idx => {
+                        const mc = idx === 1 ? mc1 : mc2;
+                        const roundData = mc.rounds[currentRoundIndex];
+                        const pts = (
+                          ((roundData.rhymes || 0) * 1) +
+                          ((roundData.quality || 0) * 2) +
+                          ((roundData.response || 0) * 1) +
+                          ((roundData.performance || 0) * 1) +
+                          ((roundData.oooShit || 0) * 1.5) -
+                          (25 - (roundData.brancas !== undefined ? roundData.brancas : 25))
+                        ).toFixed(1);
+
+                        return (
+                          <div key={idx} className="bg-neutral-950 border border-neutral-800 p-4 rounded-2xl flex flex-col items-center gap-1">
+                            <span className="text-[10px] font-extrabold uppercase text-neutral-400 tracking-wider">
+                              {mc.name || `GLADIADOR ${idx}`}
+                            </span>
+                            <span className="text-3xl font-black font-mono text-white italic">
+                              {pts} <span className="text-xs text-brand font-normal uppercase">pts</span>
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <button
+                      onClick={nextPhase}
+                      className="w-full bg-brand text-white py-4 rounded-2xl font-black uppercase text-base flex items-center justify-center gap-2 shadow-[0_0_25px_rgba(255,62,62,0.4)] hover:bg-brand/90 transition-all cursor-pointer active:scale-98"
+                    >
+                      <span>{phase === 'round3' ? 'Ver Resultado Final da Batalha' : `Avançar para o Round ${currentRoundIndex + 2}`}</span>
+                      <ChevronRight className="w-5 h-5" />
+                    </button>
+
+                    <button
+                      onClick={() => setActiveMc(roundStarter || 1)}
+                      className="text-xs text-neutral-500 hover:text-neutral-300 font-bold uppercase tracking-wider underline transition-colors cursor-pointer"
+                    >
+                      Ajustar Pontos deste Round
+                    </button>
+                  </div>
+                </div>
+              ) : null}
             </>
           )}
         </motion.div>
